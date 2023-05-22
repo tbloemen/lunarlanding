@@ -1,5 +1,3 @@
-swig
-gymnasium[box2d]
 pygame == 2.1.0
 pyglet == 1.5.21
 matplotlib
@@ -9,3 +7,5 @@ sympy >= 1.9
 joblib >= 1.1.0
 torch
 notebook
+swig
+gymnasium[box2d]
