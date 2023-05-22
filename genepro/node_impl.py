@@ -258,18 +258,8 @@ class Constant(Node, nn.Module):
     self.__value = value
     self.symb = str(value) if value is not None else "const?"
 
-    
-    if not self.__value:
-      # sample uniformly between -5 and +5
-      self.__value = np.random.uniform()*10 - 5 
-      self.symb = str(self.__value)
-    
-    self.pt_value = torch.tensor([self.__value], requires_grad=True)
-    self.der = 0
-
   def get_value(self):
     if not self.__value:
-      print("get_value")
       # sample uniformly between -5 and +5
       self.__value = np.random.uniform()*10 - 5 
       self.symb = str(self.__value)
@@ -287,7 +277,7 @@ class Constant(Node, nn.Module):
 
   def _get_args_repr(self, args):
     # make sure it is initialized
-    self.update_symbol()
+    self.get_value()
     return self.symb
 
   def get_output(self, X : np.ndarray) -> np.ndarray:
