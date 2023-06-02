@@ -162,6 +162,9 @@ class Evolution:
           self.internal_nodes, self.leaf_nodes, max_depth=self.init_max_depth )
         for _ in range(self.pop_size))
 
+    for count, individual in enumerate(self.population):
+      individual.get_readable_repr()
+
     # evaluate the trees and store their fitness
     fitnesses = Parallel(n_jobs=self.n_jobs)(delayed(self.fitness_function)(t) for t in self.population)
     fitnesses = list(map(list, zip(*fitnesses)))
