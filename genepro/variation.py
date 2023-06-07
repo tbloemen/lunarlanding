@@ -47,7 +47,9 @@ def generate_random_tree(internal_nodes : list, leaf_nodes : list, max_depth : i
   for _ in range(n.arity):
     c = generate_random_tree(internal_nodes, leaf_nodes, max_depth, curr_depth+1)
     n.insert_child(c)
-
+  
+  n.get_readable_repr()
+  
   return n
 
 def subtree_crossover(multitree : Multitree, multidonor : Multitree, unif_depth : int=True) -> Multitree:
