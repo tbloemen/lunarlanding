@@ -206,12 +206,14 @@ class Evolution:
     # evaluate diversity for current population
     fitnesses = [ind.fitness for ind in self.population]
     diversities_reverted = self.calculate_diversities(self.population)
-    diversities = [diversity * -1.0 for diversity in diversities_reverted]
+    # In the current computation of diversity, higher values means higher similarity (naming is unconventional :/)
+    # Hence, to convert it into a maximization problem, we revert the sign
+    diversities = [diversity * -1.0 for diversity in diversities_reverted] 
 
-    # select promising parents when single objective (aka fitness)
+    # select promising parents when single objective (when only considering fitness)
     if not is_multiobjective:
       sel_fun = self.selection["fun"]
-      parents = sel_fun(self.population, self.pop_size, **self.selection["kwargs"])
+      parents = sel_fun(self.population, self.pop_size, **self.selection["kwargs"]) # Tournament selection
 
     # otherwise, perform multiobjective selection for parents
     if is_multiobjective:
