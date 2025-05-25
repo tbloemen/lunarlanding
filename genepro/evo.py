@@ -229,6 +229,8 @@ class Evolution:
     every generation, promising parents are selected, offspring are generated from those parents, 
     and the offspring population is used to form the population for the next generation
     """
+    best_fitnesses_across_gens = []
+
     # set the start time
     self.start_time = time.time()
 
@@ -240,6 +242,9 @@ class Evolution:
       self._perform_generation()
       # log info
       if self.verbose:
+        best_fitnesses_across_gens.append(self.best_of_gens[-1].fitness)
         print("gen: {},\tbest of gen fitness: {:.3f},\tbest of gen size: {}".format(
             self.num_gens, self.best_of_gens[-1].fitness, len(self.best_of_gens[-1])
             ))
+    
+    return best_fitnesses_across_gens
