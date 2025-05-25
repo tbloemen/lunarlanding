@@ -12,14 +12,14 @@ def compare_multitrees(t1: List[str], t2: List[str]):
     assert len(t1) == len(t2)
     sim_score = 0
     for i in range(len(t1)):
-        e_round_1 = convert_ty_sympy(t1[i], repl_const_round)
-        e_round_2 = convert_ty_sympy(t2[i], repl_const_round)
-        if e_round_1.equals(e_round_2):
-             sim_score += 5
+        e_ones_1 = convert_ty_sympy(t1[i], repl_const_ones)
+        e_ones_2 = convert_ty_sympy(t2[i], repl_const_ones)
+        if e_ones_1.equals(e_ones_2):
+             sim_score += 1
         else:
-            e_ones_1 = convert_ty_sympy(t1[i], repl_const_ones)
-            e_ones_2 = convert_ty_sympy(t2[i], repl_const_ones)
-            sim_score += 1 if e_ones_1.equals(e_ones_2) else 0
+            e_round_1 = convert_ty_sympy(t1[i], repl_const_round)
+            e_round_2 = convert_ty_sympy(t2[i], repl_const_round)
+            sim_score += 4 if e_round_1.equals(e_round_2) else 0
     return sim_score
 
 

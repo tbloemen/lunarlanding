@@ -12,6 +12,7 @@ from joblib.parallel import Parallel, delayed
 from genepro.node import Node
 from genepro.variation import *
 from genepro.selection import tournament_selection
+from compare_expressions import compare_multitrees
 
 class Evolution:
   """
@@ -211,6 +212,11 @@ class Evolution:
 
     fitnesses = fitnesses[0]
 
+    # evaluate diversity
+    diversities = calculate_diversities(offspring_population)
+    if self.verbose:
+      print("DIVERSION: ,", diversities, "\n")
+
     for i in range(self.pop_size):
       offspring_population[i].fitness = fitnesses[i]
     # store cost
@@ -221,6 +227,7 @@ class Evolution:
     self.num_gens += 1
     best = self.population[np.argmax([t.fitness for t in self.population])]
     self.best_of_gens.append(deepcopy(best))
+
 
   def evolve(self):
     """
@@ -237,9 +244,49 @@ class Evolution:
     # generational loop
     while not self._must_terminate():
       # perform one generation
-      self._perform_generation()
+      ds = self._perform_generation()
       # log info
       if self.verbose:
         print("gen: {},\tbest of gen fitness: {:.3f},\tbest of gen size: {}".format(
-            self.num_gens, self.best_of_gens[-1].fitness, len(self.best_of_gens[-1])
+            self.num_gens, self.best_of_gens[-1].fitness, len(self.best_of_gens[-1]))
             ))
+
+# def calculate_diversities(offspring_population):
+#     # and NOW I BLOW UP THE COMPLEXITY
+#     n = len(offspring_population)
+#     diversities = [0] * n
+#     readable_reprs = [t.get_readable_repr() for t in offspring_population]
+
+#     for i in range(n):
+#         for j in range(i + 1, n):
+#             sim = compare_multitrees(readable_reprs[i], readable_reprs[j])
+#             diversities[i] += sim
+#             diversities[j] += sim
+#     return diversities
+
+
+def calculate_diversities(offspring_population):
+    
+    n = len(offspring_population)
+    diversities = [0] * n
+    readable_reprs = [t.get_readable_repr() for t in offspring_population]
+
+    # Helper to compare a single pair
+    def pairwise(i, j):
+        sim = compare_multitrees(readable_reprs[i], readable_reprs[j])
+        return (i, j, sim)
+
+    # Generate all unique pairs (i, j) with i < j
+    pairs = [(i, j) for i in range(n) for j in range(i + 1, n)]
+
+    # Parallel computation of similarities
+    results = Parallel(n_jobs=-1)(
+        delayed(pairwise)(i, j) for i, j in pairs
+    )
+    
+    # Aggregate results
+    for i, j, sim in results:
+        diversities[i] += sim
+        diversities[j] += sim
+
+    return diversities
