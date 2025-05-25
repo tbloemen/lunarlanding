@@ -32,3 +32,7 @@ def test_it_failed_once():
     s = '((((x_1+x_1)*0)-(x_1-x_5))-(x_5/((x_0+0)/x_5)))'
     e = convert_ty_sympy(s, replace_func=repl_const_ones)
     assert 0 == 0
+
+def test_bracket_fix():
+    s = '((((x_1+x_1)2)-(x_1-x_5))-(x_5/((x_0+0)/x_5)))'
+    assert insert_mul_around_paren(s) == '((((x_1+x_1)*2)-(x_1-x_5))-(x_5/((x_0+0)/x_5)))'
