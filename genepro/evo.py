@@ -213,9 +213,9 @@ class Evolution:
     fitnesses = fitnesses[0]
 
     # evaluate diversity
-    diversities = calculate_diversities(offspring_population)
+    diversities = self.calculate_diversities(offspring_population)
     if self.verbose:
-      print("DIVERSION: ,", diversities, "\n")
+      print("\nDIVERSION: ", diversities)
 
     for i in range(self.pop_size):
       offspring_population[i].fitness = fitnesses[i]
@@ -246,7 +246,7 @@ class Evolution:
     # generational loop
     while not self._must_terminate():
       # perform one generation
-      ds = self._perform_generation()
+      self._perform_generation()
       # log info
       if self.verbose:
         best_fitnesses_across_gens.append(self.best_of_gens[-1].fitness)
@@ -255,22 +255,8 @@ class Evolution:
             )
     
     return best_fitnesses_across_gens
-
-# def calculate_diversities(offspring_population):
-#     # and NOW I BLOW UP THE COMPLEXITY
-#     n = len(offspring_population)
-#     diversities = [0] * n
-#     readable_reprs = [t.get_readable_repr() for t in offspring_population]
-
-#     for i in range(n):
-#         for j in range(i + 1, n):
-#             sim = compare_multitrees(readable_reprs[i], readable_reprs[j])
-#             diversities[i] += sim
-#             diversities[j] += sim
-#     return diversities
-
-
-def calculate_diversities(offspring_population):
+  
+  def calculate_diversities(self, offspring_population):
     
     n = len(offspring_population)
     diversities = [0] * n
@@ -285,7 +271,7 @@ def calculate_diversities(offspring_population):
     pairs = [(i, j) for i in range(n) for j in range(i + 1, n)]
 
     # Parallel computation of similarities
-    results = Parallel(n_jobs=-1)(
+    results = Parallel(n_jobs=self.n_jobs)(
         delayed(pairwise)(i, j) for i, j in pairs
     )
     
@@ -295,3 +281,16 @@ def calculate_diversities(offspring_population):
         diversities[j] += sim
 
     return diversities
+
+# def calculate_diversities(offspring_population):
+#     # and NOW I BLOW UP THE COMPLEXITY
+#     n = len(offspring_population)
+#     diversities = [0] * n
+#     readable_reprs = [t.get_readable_repr() for t in offspring_population]
+
+#     for i in range(n):
+#         for j in range(i + 1, n):
+#             sim = compare_multitrees(readable_reprs[i], readable_reprs[j])
+#             diversities[i] += sim
+#             diversities[j] += sim
+#     return diversities

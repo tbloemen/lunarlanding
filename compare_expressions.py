@@ -28,10 +28,9 @@ def convert_ty_sympy(exp: str, replace_func) -> Expr:
     converts string like this `((x_0/(x_3-(x_5+x_1)))/(((x_0*x_3)*x_3)*((x_4+x_0)/x_0)))` into a sympy expression.
     Each constant is replaced with -1 if it is negative, and with 1 if it is positive
     """
-    # Replace negative numbers with -1, positive numbers with 1
-    
+    exp = insert_mul_around_paren(exp)
 
-    # Replace all numbers (not part of variable names) with -1 or 1
+    # Replace all numbers (not part of variable names)
     exp_clean = re.sub(r'(?<![a-zA-Z_])(-?\d+(\.\d+)?)', replace_func, exp)
 
     # Convert to sympy expression
@@ -46,3 +45,15 @@ def repl_const_ones(match):
 def repl_const_round(match):
     val = float(match.group(0))
     return str(int(round(val)))
+
+def insert_mul_around_paren(exp: str) -> str:
+    """
+    Inserts a multiplication sign between:
+    - a number or closing parenthesis and an opening parenthesis (e.g., '5(x+1)' or ')(' -> '5*(x+1)' or ')*(')
+    - a closing parenthesis and a number (e.g., ')5' -> ')*5')
+    """
+    # Number or ')' before '('
+    exp = re.sub(r'(\d+(\.\d+)?|\))\(', r'\1*(', exp)
+    # ')' before number
+    exp = re.sub(r'\)(\d+(\.\d+)?)', r')*\1', exp)
+    return exp
