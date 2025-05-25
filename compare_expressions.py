@@ -1,6 +1,7 @@
 from sympy import *
 from typing import List
 import re
+from functools import cache
 
 def compare_multitrees(t1: List[str], t2: List[str]):
     """
@@ -12,18 +13,18 @@ def compare_multitrees(t1: List[str], t2: List[str]):
     assert len(t1) == len(t2)
     sim_score = 0
     for i in range(len(t1)):
-        e_ones_1 = convert_ty_sympy(t1[i], repl_const_ones)
-        e_ones_2 = convert_ty_sympy(t2[i], repl_const_ones)
+        e_ones_1 = convert_to_sympy_ones(t1[i])
+        e_ones_2 = convert_to_sympy_ones(t2[i])
         if e_ones_1.equals(e_ones_2):
              sim_score += 1
         else:
-            e_round_1 = convert_ty_sympy(t1[i], repl_const_round)
-            e_round_2 = convert_ty_sympy(t2[i], repl_const_round)
+            e_round_1 = convert_to_sympy_round(t1[i])
+            e_round_2 = convert_to_sympy_round(t2[i])
             sim_score += 4 if e_round_1.equals(e_round_2) else 0
     return sim_score
 
-
-def convert_ty_sympy(exp: str, replace_func) -> Expr:
+@cache
+def convert_to_sympy_ones(exp: str) -> Expr:
     """
     converts string like this `((x_0/(x_3-(x_5+x_1)))/(((x_0*x_3)*x_3)*((x_4+x_0)/x_0)))` into a sympy expression.
     Each constant is replaced with -1 if it is negative, and with 1 if it is positive
@@ -31,7 +32,22 @@ def convert_ty_sympy(exp: str, replace_func) -> Expr:
     exp = insert_mul_around_paren(exp)
 
     # Replace all numbers (not part of variable names)
-    exp_clean = re.sub(r'(?<![a-zA-Z_])(-?\d+(\.\d+)?)', replace_func, exp)
+    exp_clean = re.sub(r'(?<![a-zA-Z_])(-?\d+(\.\d+)?)', repl_const_ones, exp)
+
+    # Convert to sympy expression
+    expr = sympify(exp_clean)
+    return expr
+
+@cache
+def convert_to_sympy_round(exp: str) -> Expr:
+    """
+    converts string like this `((x_0/(x_3-(x_5+x_1)))/(((x_0*x_3)*x_3)*((x_4+x_0)/x_0)))` into a sympy expression.
+    Each constant is replaced its rounded value
+    """
+    exp = insert_mul_around_paren(exp)
+
+    # Replace all numbers (not part of variable names)
+    exp_clean = re.sub(r'(?<![a-zA-Z_])(-?\d+(\.\d+)?)', repl_const_round, exp)
 
     # Convert to sympy expression
     expr = sympify(exp_clean)
@@ -44,7 +60,8 @@ def repl_const_ones(match):
 
 def repl_const_round(match):
     val = float(match.group(0))
-    return str(int(round(val)))
+    rounded = int(round(val))
+    return "0.1" if rounded == 0 else str(rounded)
 
 def insert_mul_around_paren(exp: str) -> str:
     """
