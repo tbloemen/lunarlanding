@@ -252,7 +252,7 @@ class Evolution:
         best_fitnesses_across_gens.append(self.best_of_gens[-1].fitness)
         print("gen: {},\tbest of gen fitness: {:.3f},\tbest of gen size: {}".format(
             self.num_gens, self.best_of_gens[-1].fitness, len(self.best_of_gens[-1]))
-            ))
+            )
     
     return best_fitnesses_across_gens
 
