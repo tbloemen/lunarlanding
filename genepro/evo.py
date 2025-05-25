@@ -132,6 +132,10 @@ class Evolution:
     self.start_time, self.elapsed_time = 0, 0
     self.best_of_gens = list()
 
+    # new attributes to access the fitness and divergence values for each individual in a generation
+    self.all_fitnesses = []
+    self.all_diversities = [] 
+
     self.memory = None
 
 
@@ -219,6 +223,11 @@ class Evolution:
 
     for i in range(self.pop_size):
       offspring_population[i].fitness = fitnesses[i]
+
+    # Store per-individual fitnesses and diversities
+    self.all_fitnesses.append(fitnesses)
+    self.all_diversities.append(diversities)
+    
     # store cost
     self.num_evals += self.pop_size
     # update the population for the next iteration
