@@ -4,13 +4,13 @@ from sympy import sympify
 
 def test_convert_ty_sympy_positive_and_negative_constants():
     expr_str = "x_1 + 3 - 5.5 + x_2 - -2"
-    expr = convert_ty_sympy(expr_str, repl_const_ones)
+    expr = convert_to_sympy_ones(expr_str, repl_const_ones)
     expected = sympify("x_1 + 1 - 1 + x_2 - -1")
     assert expr.equals(expected)
 
 def test_convert_ty_sympy_no_constants():
     expr_str = "x_0 * x_1 + x_2"
-    expr = convert_ty_sympy(expr_str, replace_func=repl_const_ones)
+    expr = convert_to_sympy_ones(expr_str, replace_func=repl_const_ones)
     assert str(expr) == "x_0*x_1 + x_2"
 
 def test_compare_multitrees_equal():
@@ -30,7 +30,7 @@ def test_compare_multitrees_none():
 
 def test_it_failed_once():
     s = '((((x_1+x_1)*0)-(x_1-x_5))-(x_5/((x_0+0)/x_5)))'
-    e = convert_ty_sympy(s, replace_func=repl_const_ones)
+    e = convert_to_sympy_ones(s, replace_func=repl_const_ones)
     assert 0 == 0
 
 def test_bracket_fix():
