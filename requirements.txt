@@ -10,3 +10,5 @@ torch
 notebook
 swig
 gymnasium[box2d]
+sympy
+pytest
