@@ -8,11 +8,24 @@ from numpy.random import shuffle
 import time, inspect
 from copy import deepcopy
 from joblib.parallel import Parallel, delayed
+from typing import List
 
 from genepro.node import Node
 from genepro.variation import *
 from genepro.selection import tournament_selection
 from compare_expressions import compare_multitrees
+
+import numpy as np
+
+class Individual:
+    def __init__(self, objectives=None, reference=None):
+        if objectives is not None:
+            self.objectives = np.array(objectives)
+        else:
+            self.objectives = np.zeros(2)  
+
+        self.reference = reference  
+        self.rank = None            
 
 class Evolution:
   """
@@ -132,10 +145,6 @@ class Evolution:
     self.start_time, self.elapsed_time = 0, 0
     self.best_of_gens = list()
 
-    # new attributes to access the fitness and divergence values for each individual in a generation
-    self.all_fitnesses = []
-    self.all_diversities = [] 
-
     self.memory = None
 
 
@@ -190,13 +199,41 @@ class Evolution:
     best = self.population[np.argmax([t.fitness for t in self.population])]
     self.best_of_gens.append(deepcopy(best))
 
-  def _perform_generation(self):
+  def _perform_generation(self, is_multiobjective = False):
     """
     Performs one generation, which consists of parent selection, offspring generation, and fitness evaluation
     """
-    # select promising parents
-    sel_fun = self.selection["fun"]
-    parents = sel_fun(self.population, self.pop_size, **self.selection["kwargs"])
+    # evaluate diversity for current population
+    fitnesses = [ind.fitness for ind in self.population]
+    diversities_reverted = self.calculate_diversities(self.population)
+    # In the current computation of diversity, higher values means higher similarity (naming is unconventional :/)
+    # Hence, to convert it into a maximization problem, we revert the sign
+    diversities = [diversity * -1.0 for diversity in diversities_reverted] 
+
+    # select promising parents when single objective (when only considering fitness)
+    if not is_multiobjective:
+      sel_fun = self.selection["fun"]
+      parents = sel_fun(self.population, self.pop_size, **self.selection["kwargs"]) # Tournament selection
+
+    # otherwise, perform multiobjective selection for parents
+    if is_multiobjective:
+      individuals = [
+        Individual(objectives=[fitnesses[i], diversities[i]], reference=self.population[i])
+        for i in range(self.pop_size)
+      ]
+
+      fronts = _fast_non_dominated_sorting(individuals)
+
+      selected = []
+      for front in fronts:
+          if len(selected) + len(front) <= self.pop_size:
+              selected.extend(front)
+          else:
+              needed = self.pop_size - len(selected)
+              selected.extend(front[:needed])
+              break
+      parents = [ind.reference for ind in selected]
+
     # generate offspring
     offspring_population = Parallel(n_jobs=self.n_jobs)(delayed(generate_offspring)
       (t, self.crossovers, self.mutations, self.coeff_opts, 
@@ -211,9 +248,7 @@ class Evolution:
     memory = memories[0]
     for m in range(1,len(memories)):
       memory += memories[m]
-
     self.memory = memory + self.memory
-
     fitnesses = fitnesses[0]
 
     # evaluate diversity
@@ -223,10 +258,6 @@ class Evolution:
 
     for i in range(self.pop_size):
       offspring_population[i].fitness = fitnesses[i]
-
-    # Store per-individual fitnesses and diversities
-    self.all_fitnesses.append(fitnesses)
-    self.all_diversities.append(diversities)
     
     # store cost
     self.num_evals += self.pop_size
@@ -238,7 +269,7 @@ class Evolution:
     self.best_of_gens.append(deepcopy(best))
 
 
-  def evolve(self):
+  def evolve(self, is_multiobjective = False):
     """
     Runs the evolution until a termination criterion is met;
     first, a random population is initialized, second the generational loop is started:
@@ -255,7 +286,7 @@ class Evolution:
     # generational loop
     while not self._must_terminate():
       # perform one generation
-      self._perform_generation()
+      self._perform_generation(is_multiobjective)
       # log info
       best_fitnesses_across_gens.append(self.best_of_gens[-1].fitness)
       if self.verbose:
@@ -265,6 +296,7 @@ class Evolution:
     
     return best_fitnesses_across_gens
   
+
   def calculate_diversities(self, offspring_population):
     
     n = len(offspring_population)
@@ -291,15 +323,80 @@ class Evolution:
 
     return diversities
 
-# def calculate_diversities(offspring_population):
-#     # and NOW I BLOW UP THE COMPLEXITY
-#     n = len(offspring_population)
-#     diversities = [0] * n
-#     readable_reprs = [t.get_readable_repr() for t in offspring_population]
 
-#     for i in range(n):
-#         for j in range(i + 1, n):
-#             sim = compare_multitrees(readable_reprs[i], readable_reprs[j])
-#             diversities[i] += sim
-#             diversities[j] += sim
-#     return diversities
+def _max_pareto_dominates( individual_1: Individual, individual_2: Individual) -> bool:
+    is_dominates = True
+    is_strictly_better = False
+    objective_num = len(individual_1.objectives)
+
+    for i in range(objective_num):
+        # Individual 1 is strictly better (greater objective value)
+        if individual_1.objectives[i] > individual_2.objectives[i]: 
+            is_strictly_better = True
+
+        # Individual 1 is worse in at least one objective (smaller value)
+        elif individual_1.objectives[i] < individual_2.objectives[i]: 
+            is_dominates = False
+            break
+            
+    return is_dominates and is_strictly_better
+
+
+def _fast_non_dominated_sorting(population: List[Individual]):
+    '''
+    Fast non-dominating sorting algorithm
+    It sorts population into non dominated fronts and assigns the correct ranks for each individual
+    #####
+    Input: population (list of Individual class instances)
+    Output: list of lists of ranked Individuals (variable "fronts")
+    fronts[0] is the best front, fronts[-1] is the worst one
+    fronts[i] is a list of ranked Individual instances
+    #####
+    '''
+    current_front = []
+    current_front_individuals = []
+    dominates_list = [[] for _ in range(len(population))]
+    domination_counts = np.zeros(len(population))
+
+    for i, individual_1 in enumerate(population):
+      dominates = []
+      domination_count = 0
+      for j, individual_2 in enumerate(population):
+        if i == j:
+          continue
+        if _max_pareto_dominates(individual_1, individual_2):
+          dominates.append(j) # Store index of the dominated individual
+        elif _max_pareto_dominates(individual_2, individual_1):
+          domination_count += 1
+
+      if domination_count == 0:
+        individual_1.rank = 0
+        current_front.append(i) # Again, store index of the individual in the first front 
+        current_front_individuals.append(individual_1)
+
+      dominates_list[i] = dominates
+      domination_counts[i] = domination_count
+
+    # Append the first front to the fronts list
+    fronts = []
+    fronts.append(current_front_individuals)
+    
+    current_rank = 0
+    while fronts[current_rank]:
+      next_front = []
+      next_front_individuals = []
+      for i in current_front:
+        for j in dominates_list[i]:
+          individual = population[i]
+          next_individual = population[j]
+          domination_counts[j] -= 1 # Reduce the domination count by 1
+          if domination_counts[j] == 0:
+            # Assign the individual to the next front
+            next_individual.rank = current_rank + 1
+            next_front.append(j)
+            next_front_individuals.append(next_individual)
+      current_rank += 1
+      current_front = next_front
+      fronts.append(next_front_individuals)
+
+    return fronts
