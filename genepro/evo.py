@@ -219,7 +219,7 @@ class Evolution:
     # evaluate diversity
     diversities = self.calculate_diversities(offspring_population)
     if self.verbose:
-      print("\nDIVERSION: ", diversities)
+      print("\nSimilarity: ", diversities)
 
     for i in range(self.pop_size):
       offspring_population[i].fitness = fitnesses[i]
@@ -251,14 +251,14 @@ class Evolution:
     self.start_time = time.time()
 
     self._initialize_population()
-
+    best_fitnesses_across_gens.append(self.best_of_gens[-1].fitness)
     # generational loop
     while not self._must_terminate():
       # perform one generation
       self._perform_generation()
       # log info
+      best_fitnesses_across_gens.append(self.best_of_gens[-1].fitness)
       if self.verbose:
-        best_fitnesses_across_gens.append(self.best_of_gens[-1].fitness)
         print("gen: {},\tbest of gen fitness: {:.3f},\tbest of gen size: {}".format(
             self.num_gens, self.best_of_gens[-1].fitness, len(self.best_of_gens[-1]))
             )

@@ -32,8 +32,7 @@ def convert_to_sympy_ones(exp: str) -> Expr:
     exp = insert_mul_around_paren(exp)
 
     # Replace all numbers (not part of variable names)
-    exp_clean = re.sub(r'(?<![a-zA-Z_])(-?\d+(\.\d+)?)', repl_const_ones, exp)
-
+    exp_clean = re.sub(r'(?<![a-zA-Z_])(\d+(\.\d+)?)', '1', exp)
     # Convert to sympy expression
     expr = sympify(exp_clean)
     return expr
@@ -44,24 +43,17 @@ def convert_to_sympy_round(exp: str) -> Expr:
     converts string like this `((x_0/(x_3-(x_5+x_1)))/(((x_0*x_3)*x_3)*((x_4+x_0)/x_0)))` into a sympy expression.
     Each constant is replaced its rounded value
     """
+    def repl_const_round(match):
+        val = float(match.group(0))
+        rounded = int(round(val))
+        return "0.1" if rounded == 0 else str(rounded)
     exp = insert_mul_around_paren(exp)
 
     # Replace all numbers (not part of variable names)
-    exp_clean = re.sub(r'(?<![a-zA-Z_])(-?\d+(\.\d+)?)', repl_const_round, exp)
-
+    exp_clean = re.sub(r'(?<![a-zA-Z_])(\d+(\.\d+)?)', repl_const_round, exp)
     # Convert to sympy expression
     expr = sympify(exp_clean)
     return expr
-
-
-def repl_const_ones(match):
-        val = float(match.group(0))
-        return "-1" if val < 0 else "1"
-
-def repl_const_round(match):
-    val = float(match.group(0))
-    rounded = int(round(val))
-    return "0.1" if rounded == 0 else str(rounded)
 
 def insert_mul_around_paren(exp: str) -> str:
     """
