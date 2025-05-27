@@ -3,31 +3,33 @@ from genepro.node import Node
 import torch
 import torch.nn as nn
 
+
 class Plus(Node, nn.Module):
   def __init__(self):
-    super(Plus,self).__init__()
+    super(Plus, self).__init__()
     self.arity = 2
     self.symb = '+'
 
   def _get_args_repr(self, args):
-    return self._get_typical_repr(args,'between')
+    return self._get_typical_repr(args, 'between')
 
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
     return c_outs[0] + c_outs[1]
-  
+
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
     return c_outs[0] + c_outs[1]
 
+
 class Minus(Node, nn.Module):
   def __init__(self):
-    super(Minus,self).__init__()
+    super(Minus, self).__init__()
     self.arity = 2
     self.symb = '-'
 
   def _get_args_repr(self, args):
-    return self._get_typical_repr(args,'between')
+    return self._get_typical_repr(args, 'between')
 
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
@@ -40,17 +42,17 @@ class Minus(Node, nn.Module):
 
 class Times(Node, nn.Module):
   def __init__(self):
-    super(Times,self).__init__()
+    super(Times, self).__init__()
     self.arity = 2
     self.symb = '*'
 
   def _get_args_repr(self, args):
-    return self._get_typical_repr(args,'between')
+    return self._get_typical_repr(args, 'between')
 
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
     return np.multiply(c_outs[0], c_outs[1])
-  
+
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
     return torch.multiply(c_outs[0], c_outs[1])
@@ -58,39 +60,38 @@ class Times(Node, nn.Module):
 
 class Div(Node):
   def __init__(self):
-    super(Div,self).__init__()
+    super(Div, self).__init__()
     self.arity = 2
     self.symb = '/'
 
   def _get_args_repr(self, args):
-    return self._get_typical_repr(args,'between')
+    return self._get_typical_repr(args, 'between')
 
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
     # implements a protection to avoid dividing by 0
     sign_b = np.sign(c_outs[1])
-    sign_b = np.where(sign_b == 0, 1, sign_b) 
+    sign_b = np.where(sign_b == 0, 1, sign_b)
     protected_div = sign_b * c_outs[0] / (1e-9 + np.abs(c_outs[1]))
     return protected_div
 
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
-    
+
     sign_b = torch.sign(c_outs[1])
-    sign_b = torch.where(sign_b == 0, 1, sign_b) 
+    sign_b = torch.where(sign_b == 0, 1, sign_b)
     protected_div = sign_b * c_outs[0] / (1e-9 + torch.abs(c_outs[1]))
     return protected_div
 
 
-
 class Square(Node):
   def __init__(self):
-    super(Square,self).__init__()
+    super(Square, self).__init__()
     self.arity = 1
     self.symb = '**2'
 
   def _get_args_repr(self, args):
-    return self._get_typical_repr(args,'after')
+    return self._get_typical_repr(args, 'after')
 
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
@@ -98,17 +99,17 @@ class Square(Node):
 
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
-    return c_outs[0]**2
+    return c_outs[0] ** 2
 
 
 class Cube(Node):
   def __init__(self):
-    super(Cube,self).__init__()
+    super(Cube, self).__init__()
     self.arity = 1
     self.symb = '**3'
 
   def _get_args_repr(self, args):
-    return self._get_typical_repr(args,'after')
+    return self._get_typical_repr(args, 'after')
 
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
@@ -117,13 +118,13 @@ class Cube(Node):
 
 class Sqrt(Node):
   def __init__(self):
-    super(Sqrt,self).__init__()
+    super(Sqrt, self).__init__()
     self.arity = 1
     self.symb = 'sqrt'
 
   def _get_args_repr(self, args):
     # let's report also protection
-    return "sqrt(abs("+args[0]+"))"
+    return "sqrt(abs(" + args[0] + "))"
 
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
@@ -137,13 +138,13 @@ class Sqrt(Node):
 
 class Log(Node):
   def __init__(self):
-    super(Log,self).__init__()
+    super(Log, self).__init__()
     self.arity = 1
     self.symb = 'log'
 
   def _get_args_repr(self, args):
     # let's report also protection (to some level of detail)
-    return "log(abs("+args[0]+"))"
+    return "log(abs(" + args[0] + "))"
 
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
@@ -159,12 +160,12 @@ class Log(Node):
 
 class Exp(Node):
   def __init__(self):
-    super(Exp,self).__init__()
+    super(Exp, self).__init__()
     self.arity = 1
     self.symb = "exp"
 
   def _get_args_repr(self, args):
-    return self._get_typical_repr(args,'before')
+    return self._get_typical_repr(args, 'before')
 
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
@@ -173,12 +174,12 @@ class Exp(Node):
 
 class Sin(Node):
   def __init__(self):
-    super(Sin,self).__init__()
+    super(Sin, self).__init__()
     self.arity = 1
     self.symb = "sin"
 
   def _get_args_repr(self, args):
-    return self._get_typical_repr(args,'before')
+    return self._get_typical_repr(args, 'before')
 
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
@@ -191,12 +192,12 @@ class Sin(Node):
 
 class Cos(Node):
   def __init__(self):
-    super(Cos,self).__init__()
+    super(Cos, self).__init__()
     self.arity = 1
     self.symb = "cos"
 
   def _get_args_repr(self, args):
-    return self._get_typical_repr(args,'before')
+    return self._get_typical_repr(args, 'before')
 
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
@@ -209,16 +210,16 @@ class Cos(Node):
 
 class Max(Node):
   def __init__(self):
-    super(Max,self).__init__()
+    super(Max, self).__init__()
     self.arity = 2
     self.symb = "max"
 
   def _get_args_repr(self, args):
-    return self._get_typical_repr(args,"before")
+    return self._get_typical_repr(args, "before")
 
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
-    return np.where(c_outs[0]>c_outs[1], c_outs[0], c_outs[1])
+    return np.where(c_outs[0] > c_outs[1], c_outs[0], c_outs[1])
 
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
@@ -227,41 +228,96 @@ class Max(Node):
 
 class Min(Node):
   def __init__(self):
-    super(Min,self).__init__()
+    super(Min, self).__init__()
     self.arity = 2
     self.symb = "min"
 
   def _get_args_repr(self, args):
-    return self._get_typical_repr(args,"before")
+    return self._get_typical_repr(args, "before")
 
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
-    return np.where(c_outs[0]<c_outs[1], c_outs[0], c_outs[1])
+    return np.where(c_outs[0] < c_outs[1], c_outs[0], c_outs[1])
 
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
     return torch.min(c_outs[0], c_outs[1])
 
+
+class Abs(Node):
+  def __init__(self):
+    super(Abs, self).__init__()
+    self.arity = 1
+    self.symb = "abs"
+
+  def _get_args_repr(self, args):
+    return self._get_typical_repr(args, 'before')
+
+  def get_output(self, X):
+    c_outs = self._get_child_outputs(X)
+    return np.abs(c_outs[0])
+
+  def get_output_pt(self, X):
+    c_outs = self._get_child_outputs_pt(X)
+    return torch.abs(c_outs[0])
+
+
+class Sign(Node):
+  def __init__(self):
+    super(Sign, self).__init__()
+    self.arity = 1
+    self.symb = "sign"
+
+  def _get_args_repr(self, args):
+    return self._get_typical_repr(args, 'before')
+
+  def get_output(self, X):
+    c_outs = self._get_child_outputs(X)
+    return np.sign(c_outs[0])
+
+  def get_output_pt(self, X):
+    c_outs = self._get_child_outputs_pt(X)
+    return torch.sign(c_outs[0])
+
+
+class Clamp(Node):
+  def __init__(self):
+    super(Clamp, self).__init__()
+    self.arity = 3
+    self.symb = "clamp"
+
+  def _get_args_repr(self, args):
+    return self._get_typical_repr(args, 'before')
+
+  def get_output(self, X):
+    c_outs = self._get_child_outputs(X)
+    return np.clip(c_outs[0], c_outs[1], c_outs[2])
+
+  def get_output_pt(self, X):
+    c_outs = self._get_child_outputs_pt(X)
+    return torch.clamp(c_outs[0], c_outs[1], c_outs[2])
+
+
 class Feature(Node, nn.Module):
-  def __init__(self,id):
-    super(Feature,self).__init__()
+  def __init__(self, id):
+    super(Feature, self).__init__()
     self.arity = 0
     self.id = id
-    self.symb = 'x_'+str(id)
+    self.symb = 'x_' + str(id)
 
   def _get_args_repr(self, args):
     return self.symb
 
   def get_output(self, X):
-    return X[:,self.id]
-  
+    return X[:, self.id]
+
   def get_output_pt(self, X):
-    return X[:,self.id]
+    return X[:, self.id]
 
 
 class Constant(Node, nn.Module):
-  def __init__(self, value : float=None):
-    super(Constant,self).__init__()
+  def __init__(self, value: float = None):
+    super(Constant, self).__init__()
     self.arity = 0
     self.__value = value
     self.symb = str(value) if value is not None else "const?"
@@ -270,18 +326,18 @@ class Constant(Node, nn.Module):
   def get_value(self):
     if not self.__value:
       # sample uniformly between -5 and +5
-      self.__value = np.random.uniform()*10 - 5 
+      self.__value = np.random.uniform() * 10 - 5
       self.symb = str(self.__value)
-      self.pt_value = torch.tensor([self.__value],requires_grad=True)
+      self.pt_value = torch.tensor([self.__value], requires_grad=True)
       self.symb = str(self.pt_value.item())
-    return self.pt_value.item() 
+    return self.pt_value.item()
 
   def update_symbol(self):
     if not self.__value:
-      self.__value = np.random.uniform()*10 - 5 
+      self.__value = np.random.uniform() * 10 - 5
       self.symb = str(self.__value)
-      self.pt_value = torch.tensor([self.__value],requires_grad=True)
-      
+      self.pt_value = torch.tensor([self.__value], requires_grad=True)
+
     self.symb = str(self.pt_value.item())
 
   def _get_args_repr(self, args):
@@ -289,7 +345,7 @@ class Constant(Node, nn.Module):
     self.update_symbol()
     return self.symb
 
-  def get_output(self, X : np.ndarray) -> np.ndarray:
+  def get_output(self, X: np.ndarray) -> np.ndarray:
     # make sure it is initialized
     v = self.get_value()
     return np.repeat(v, len(X))
@@ -299,7 +355,7 @@ class Constant(Node, nn.Module):
     v = self.get_value()
     return self.pt_value.repeat(len(X))
 
-  def set_value(self, value : float):
-    self.__value = value   
+  def set_value(self, value: float):
+    self.__value = value
     self.symb = str(value)
-    self.pt_value = torch.tensor([self.__value],requires_grad=True)
+    self.pt_value = torch.tensor([self.__value], requires_grad=True)
