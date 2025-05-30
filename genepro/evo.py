@@ -278,6 +278,9 @@ class Evolution:
     and the offspring population is used to form the population for the next generation
     """
     best_fitnesses_across_gens = []
+    time_elapsed = []
+    num_evals = []
+    average_fitness = []
 
     # set the start time
     self.start_time = time.time()
@@ -290,12 +293,16 @@ class Evolution:
       self._perform_generation(is_multiobjective)
       # log info
       best_fitnesses_across_gens.append(self.best_of_gens[-1].fitness)
+      average_fitness.append(np.average([t.fitness for t in self.population]))
+      time_elapsed.append(self.elapsed_time)
+      num_evals.append(self.num_evals)
+
       if self.verbose:
         print("gen: {}, best of gen fitness: {:.3f},\tbest of gen size: {}".format(
             self.num_gens, self.best_of_gens[-1].fitness, len(self.best_of_gens[-1]))
             )
     
-    return best_fitnesses_across_gens
+    return best_fitnesses_across_gens,average_fitness,time_elapsed,num_evals
   
 
   def calculate_diversities(self, offspring_population):
