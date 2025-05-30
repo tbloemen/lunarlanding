@@ -203,13 +203,6 @@ class Evolution:
     """
     Performs one generation, which consists of parent selection, offspring generation, and fitness evaluation
     """
-    # evaluate diversity for current population
-    fitnesses = [ind.fitness for ind in self.population]
-    diversities_reverted = self.calculate_diversities(self.population)
-    # In the current computation of diversity, higher values means higher similarity (naming is unconventional :/)
-    # Hence, to convert it into a maximization problem, we revert the sign
-    diversities = [diversity * -1.0 for diversity in diversities_reverted] 
-
     # select promising parents when single objective (when only considering fitness)
     if not is_multiobjective:
       sel_fun = self.selection["fun"]
@@ -217,6 +210,13 @@ class Evolution:
 
     # otherwise, perform multiobjective selection for parents
     if is_multiobjective:
+      # evaluate diversity for current population
+      fitnesses = [ind.fitness for ind in self.population]
+      diversities_reverted = self.calculate_diversities(self.population)
+      # in the current computation of diversity, higher values means higher similarity (naming is unconventional :/)
+      # hence, to convert it into a maximization problem, we revert the sign
+      diversities = [diversity * -1.0 for diversity in diversities_reverted] 
+
       individuals = [
         Individual(objectives=[fitnesses[i], diversities[i]], reference=self.population[i])
         for i in range(self.pop_size)
@@ -251,10 +251,11 @@ class Evolution:
     self.memory = memory + self.memory
     fitnesses = fitnesses[0]
 
-    # evaluate diversity
-    diversities = self.calculate_diversities(offspring_population)
-    if self.verbose:
-      print("\nSimilarity: ", diversities)
+    # evaluate diversity of the offspring under multi-objective optimization scenario
+    if is_multiobjective:
+      diversities = self.calculate_diversities(offspring_population)
+      if self.verbose:
+        print("\nSimilarity: ", diversities)
 
     for i in range(self.pop_size):
       offspring_population[i].fitness = fitnesses[i]
@@ -290,7 +291,7 @@ class Evolution:
       # log info
       best_fitnesses_across_gens.append(self.best_of_gens[-1].fitness)
       if self.verbose:
-        print("gen: {},\tbest of gen fitness: {:.3f},\tbest of gen size: {}".format(
+        print("gen: {}, best of gen fitness: {:.3f},\tbest of gen size: {}".format(
             self.num_gens, self.best_of_gens[-1].fitness, len(self.best_of_gens[-1]))
             )
     
