@@ -144,6 +144,7 @@ class Evolution:
     self.num_evals = 0
     self.start_time, self.elapsed_time = 0, 0
     self.best_of_gens = list()
+    self.avg_of_gens = list()
 
     self.memory = None
 
@@ -197,7 +198,9 @@ class Evolution:
     self.num_evals += self.pop_size
     # store best at initialization
     best = self.population[np.argmax([t.fitness for t in self.population])]
+    avg = np.mean([t.fitness for t in self.population])
     self.best_of_gens.append(deepcopy(best))
+    self.avg_of_gens.append(avg)
 
   def _perform_generation(self, is_multiobjective = False):
     """
@@ -267,7 +270,9 @@ class Evolution:
     # update info
     self.num_gens += 1
     best = self.population[np.argmax([t.fitness for t in self.population])]
+    avg = np.mean([t.fitness for t in self.population])
     self.best_of_gens.append(deepcopy(best))
+    self.avg_of_gens.append(avg)
 
 
   def evolve(self, is_multiobjective = False):
@@ -287,6 +292,7 @@ class Evolution:
 
     self._initialize_population()
     best_fitnesses_across_gens.append(self.best_of_gens[-1].fitness)
+    average_fitness.append(np.average([t.fitness for t in self.population]))
     # generational loop
     while not self._must_terminate():
       # perform one generation
@@ -302,7 +308,7 @@ class Evolution:
             self.num_gens, self.best_of_gens[-1].fitness, len(self.best_of_gens[-1]))
             )
     
-    return best_fitnesses_across_gens,average_fitness,time_elapsed,num_evals
+    return best_fitnesses_across_gens, average_fitness, time_elapsed, num_evals
   
 
   def calculate_diversities(self, offspring_population):
