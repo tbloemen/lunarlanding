@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch
 from genepro.node_impl import *
 
+
 class Multitree(nn.Module):
   def __init__(self, n_trees: int):
     super(Multitree, self).__init__()
@@ -13,15 +14,22 @@ class Multitree(nn.Module):
   def get_output_pt(self, x):
     output = []
     for child in self.children:
-      output.append(child.get_output_pt(x).view(-1,1))
+      output.append(child.get_output_pt(x).view(-1, 1))
 
-    return torch.cat(output,dim=1)
+    return torch.cat(output, dim=1)
 
   def get_subtrees_consts(self):
     constants = []
     for child in self.children:
       constants.extend([node.pt_value for node in child.get_subtree() if isinstance(node, Constant)])
     return constants
+
+  def get_subtrees_internals(self) -> list[Node]:
+    internals = []
+    for child in self.children:
+      internals.extend(
+        [node for node in child.get_subtree() if (not isinstance(node, Constant) and not isinstance(node, Feature))])
+    return internals
 
   def __len__(self) -> int:
     """
