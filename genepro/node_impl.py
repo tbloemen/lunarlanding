@@ -115,6 +115,10 @@ class Cube(Node):
         c_outs = self._get_child_outputs(X)
         return np.multiply(np.square(c_outs[0]), c_outs[0])
 
+    def get_output_pt(self, X):
+        c_outs = self._get_child_outputs_pt(X)
+        return torch.multiply(c_outs[0] ** 2, c_outs[0])
+
 
 class Sqrt(Node):
     def __init__(self):
@@ -170,6 +174,10 @@ class Exp(Node):
     def get_output(self, X):
         c_outs = self._get_child_outputs(X)
         return np.exp(c_outs[0])
+
+    def get_output_pt(self, X):
+        c_outs = self._get_child_outputs_pt(X)
+        return torch.exp(c_outs[0])
 
 
 class Sin(Node):
