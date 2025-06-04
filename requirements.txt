@@ -12,3 +12,6 @@ swig
 gymnasium[box2d]
 sympy
 pytest
+pandas
+matplotlib
+plotly
