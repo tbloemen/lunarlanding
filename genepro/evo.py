@@ -16,7 +16,6 @@ from genepro.selection import tournament_selection
 from compare_expressions import compare_multitrees
 
 import numpy as np
-
 class Individual:
     def __init__(self, objectives=None, reference=None):
         if objectives is not None:
@@ -122,7 +121,20 @@ class Evolution:
     n_jobs : int=4,
     verbose : bool=False,
     ):
-
+    self.num_gens = 0
+    k = 0
+    for i in range(50):
+        k += np.power(np.e, -i*coeff_opts[0]["k"])
+    k = 12.5/k
+    coeff_opts = [{
+        "fun": coeff_mutation,
+        "rate": coeff_opts[0]["rate"],
+        "kwargs": {
+            "temp": coeff_opts[0]["k"],
+            "num_gens": self.num_gens,
+            "const": k
+        }
+    }]
     # set parameters as attributes
     _, _, _, values = inspect.getargvalues(inspect.currentframe())
     values.pop('self')
@@ -134,18 +146,18 @@ class Evolution:
       for i in range(len(variation_list)):
         if "kwargs" not in variation_list[i]:
           variation_list[i]["kwargs"] = dict()
+
     # same for selection
     if "kwargs" not in selection:
       selection["kwargs"] = dict()
 
     # initialize some state variables
     self.population = list()
-    self.num_gens = 0
+
     self.num_evals = 0
     self.start_time, self.elapsed_time = 0, 0
     self.best_of_gens = list()
     self.avg_of_gens = list()
-
     self.memory = None
 
 

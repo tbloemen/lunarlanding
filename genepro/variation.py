@@ -4,6 +4,7 @@ from numpy.random import normal as randn
 from numpy.random import choice as randc
 from numpy.random import shuffle
 from copy import deepcopy
+
 from genepro.multitree import Multitree
 
 from genepro.node import Node
@@ -205,7 +206,7 @@ def subtree_mutation(multitree : Multitree, internal_nodes : list, leaf_nodes : 
   multitree.children[r] = tree
   return multitree
 
-def coeff_mutation(multitree : Multitree, prob_coeff_mut : float= 0.25, temp : float=0.25) -> Node:
+def coeff_mutation(multitree : Multitree, prob_coeff_mut : float= 0.25, temp : float=0.2, num_gens: int=0, const: float=2.26597) -> Node:
   """
   Applies random coefficient mutations to constant nodes 
 
@@ -231,6 +232,7 @@ def coeff_mutation(multitree : Multitree, prob_coeff_mut : float= 0.25, temp : f
     if randu() < prob_coeff_mut:
       v = c.get_value()
       # update the value by +- temp relative to current value
+      k = const*np.power(np.e, num_gens*-temp)
       new_v = v + temp*np.abs(v)*randn()
       c.set_value(new_v)
   
