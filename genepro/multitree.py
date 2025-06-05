@@ -30,6 +30,20 @@ class Multitree(nn.Module):
             )
         return constants
 
+    def get_subtrees_internals(self) -> list[Node]:
+        internals = []
+        for child in self.children:
+            internals.extend(
+                [
+                    node
+                    for node in child.get_subtree()
+                    if (
+                        not isinstance(node, Constant) and not isinstance(node, Feature)
+                    )
+                ]
+            )
+        return internals
+
     def __len__(self) -> int:
         """
         Returns the max length of the trees in the multi-tree

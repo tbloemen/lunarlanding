@@ -115,6 +115,10 @@ class Cube(Node):
         c_outs = self._get_child_outputs(X)
         return np.multiply(np.square(c_outs[0]), c_outs[0])
 
+    def get_output_pt(self, X):
+        c_outs = self._get_child_outputs_pt(X)
+        return torch.multiply(c_outs[0] ** 2, c_outs[0])
+
 
 class Sqrt(Node):
     def __init__(self):
@@ -170,6 +174,10 @@ class Exp(Node):
     def get_output(self, X):
         c_outs = self._get_child_outputs(X)
         return np.exp(c_outs[0])
+
+    def get_output_pt(self, X):
+        c_outs = self._get_child_outputs_pt(X)
+        return torch.exp(c_outs[0])
 
 
 class Sin(Node):
@@ -242,6 +250,60 @@ class Min(Node):
     def get_output_pt(self, X):
         c_outs = self._get_child_outputs_pt(X)
         return torch.min(c_outs[0], c_outs[1])
+
+
+class Abs(Node):
+    def __init__(self):
+        super(Abs, self).__init__()
+        self.arity = 1
+        self.symb = "abs"
+
+    def _get_args_repr(self, args):
+        return self._get_typical_repr(args, "before")
+
+    def get_output(self, X):
+        c_outs = self._get_child_outputs(X)
+        return np.abs(c_outs[0])
+
+    def get_output_pt(self, X):
+        c_outs = self._get_child_outputs_pt(X)
+        return torch.abs(c_outs[0])
+
+
+class Sign(Node):
+    def __init__(self):
+        super(Sign, self).__init__()
+        self.arity = 1
+        self.symb = "sign"
+
+    def _get_args_repr(self, args):
+        return self._get_typical_repr(args, "before")
+
+    def get_output(self, X):
+        c_outs = self._get_child_outputs(X)
+        return np.sign(c_outs[0])
+
+    def get_output_pt(self, X):
+        c_outs = self._get_child_outputs_pt(X)
+        return torch.sign(c_outs[0])
+
+
+class Clamp(Node):
+    def __init__(self):
+        super(Clamp, self).__init__()
+        self.arity = 3
+        self.symb = "clamp"
+
+    def _get_args_repr(self, args):
+        return self._get_typical_repr(args, "before")
+
+    def get_output(self, X):
+        c_outs = self._get_child_outputs(X)
+        return np.clip(c_outs[0], c_outs[1], c_outs[2])
+
+    def get_output_pt(self, X):
+        c_outs = self._get_child_outputs_pt(X)
+        return torch.clamp(c_outs[0], c_outs[1], c_outs[2])
 
 
 class Feature(Node, nn.Module):
