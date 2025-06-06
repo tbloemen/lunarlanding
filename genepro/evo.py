@@ -130,6 +130,7 @@ class Evolution:
         verbose: bool = False,
     ):
 
+
         # set parameters as attributes
         _, _, _, values = inspect.getargvalues(inspect.currentframe())
         values.pop("self")
@@ -153,6 +154,7 @@ class Evolution:
         self.best_of_gens = list()
         self.avg_of_gens = list()
 
+        self.archive = []
         self.memory = None
 
     def _must_terminate(self) -> bool:
@@ -207,6 +209,8 @@ class Evolution:
 
         for i in range(self.pop_size):
             self.population[i].fitness = fitnesses[i]
+
+
         # store eval cost
         self.num_evals += self.pop_size
         # store best at initialization
@@ -215,7 +219,72 @@ class Evolution:
         self.best_of_gens.append(deepcopy(best))
         self.avg_of_gens.append(avg)
 
-    def _perform_generation(self, is_multiobjective=False):
+    def calculate_diversities_for_archive(self, candidates):
+        n_cand = len(candidates)
+        n_arch = len(self.archive)
+
+        other = candidates
+        if len(self.archive) != 0 :
+            other = self.archive
+
+        n_arch = len(other)
+
+        cand_repr = [c.get_readable_repr() for c in candidates]
+        arch_repr = [a.get_readable_repr() for a in other]
+
+        def avg_similarity_to_archive(i):
+            sims = [compare_multitrees(cand_repr[i], arch_repr[j]) for j in range(n_arch)]
+            print(i)
+            return sum(sims) / n_arch if n_arch > 0 else 0
+
+        diversities = Parallel(n_jobs=self.n_jobs)(delayed(avg_similarity_to_archive)(i) for i in range(n_cand))
+
+        return diversities
+
+    def _update_archive(self, candidates, archive_flag="no_archive"):
+        """
+            Updates the archive if one exists. Options for flags: no archive, basic, diversity.
+
+        """
+        if archive_flag == "no_archive":
+            return
+
+        combined = self.archive + candidates
+
+        # Remove duplicates
+        unique = {tuple(c.get_readable_repr()): c for c in combined}
+        combined = list(unique.values())
+
+        if archive_flag == "basic":
+            # Keep top-N based on fitness
+            combined.sort(key=lambda x: x.fitness, reverse=True)
+            self.archive = combined[:self.pop_size]
+
+        # print("Archive")
+        # print([c.fitness for c in self.archive])
+
+        elif archive_flag == "diversity":
+            candidates = combined  # or just new candidates if you prefer
+            fitnesses = [ind.fitness for ind in candidates]
+            print("Candidates len")
+            print(len(candidates))
+            diversities = self.calculate_diversities_for_archive(candidates)
+            diversities = [diversity * -1.0 for diversity in diversities]
+            print(len(diversities))
+            f_max, f_min = max(fitnesses), min(fitnesses)
+            d_max, d_min = max(diversities), min(diversities)
+            norm_fitnesses = [(f - f_min) / (f_max - f_min + 1e-8) for f in fitnesses]
+            norm_diversities = [(d - d_min) / (d_max - d_min + 1e-8) for d in diversities]
+            scores = [0.7 * f + 0.3 * d for f, d in zip(norm_fitnesses, norm_diversities)]
+
+            sorted_inds = [x for _, x in sorted(zip(scores, candidates), key=lambda x: x[0], reverse=True)]
+            self.archive = sorted_inds[:self.pop_size]
+
+        print("Archive")
+        print([c.fitness for c in self.archive])
+
+
+    def _perform_generation(self, is_multiobjective=False, archive_flag="no_archive"):
         """
         Performs one generation, which consists of parent selection, offspring generation, and fitness evaluation
         """
@@ -294,6 +363,23 @@ class Evolution:
         # store cost
         self.num_evals += self.pop_size
         # update the population for the next iteration
+
+        print("Number of offsprings: ")
+        print(len(offspring_population))
+
+        unique = {tuple(c.get_readable_repr()): c for c in offspring_population}
+        print("Len of unique individuals in the population")
+        print(len(unique))
+        # Calculate archive:
+        self._update_archive(offspring_population, archive_flag)
+
+        if archive_flag != "no_archive":
+            num_elites = max(1, int(self.pop_size * 0.1))
+            sorted_archive = sorted(self.archive, key=lambda x: x.fitness, reverse=True)
+            elites = deepcopy(sorted_archive[:num_elites])
+            offspring_population.sort(key=lambda x: x.fitness)
+            offspring_population[:num_elites] = elites
+
         self.population = offspring_population
         # update info
         self.num_gens += 1
@@ -302,7 +388,8 @@ class Evolution:
         self.best_of_gens.append(deepcopy(best))
         self.avg_of_gens.append(avg)
 
-    def evolve(self, is_multiobjective=False):
+    def evolve(self, is_multiobjective=False, archive_flag="no_archive"):
+
         """
         Runs the evolution until a termination criterion is met;
         first, a random population is initialized, second the generational loop is started:
@@ -318,12 +405,13 @@ class Evolution:
         self.start_time = time.time()
 
         self._initialize_population()
+        self.archive = []
         best_fitnesses_across_gens.append(self.best_of_gens[-1].fitness)
         average_fitness.append(np.average([t.fitness for t in self.population]))
         # generational loop
         while not self._must_terminate():
             # perform one generation
-            self._perform_generation(is_multiobjective)
+            self._perform_generation(is_multiobjective,archive_flag)
             # log info
             best_fitnesses_across_gens.append(self.best_of_gens[-1].fitness)
             average_fitness.append(np.average([t.fitness for t in self.population]))
