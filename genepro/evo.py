@@ -131,7 +131,7 @@ class Evolution:
         "rate": coeff_opts[0]["rate"],
         "kwargs": {
             "temp": coeff_opts[0]["k"],
-            "num_gens": self.num_gens,
+            "generation": self.num_gens,
             "const": k
         }
     }]

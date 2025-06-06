@@ -206,7 +206,7 @@ def subtree_mutation(multitree : Multitree, internal_nodes : list, leaf_nodes : 
   multitree.children[r] = tree
   return multitree
 
-def coeff_mutation(multitree : Multitree, prob_coeff_mut : float= 0.25, temp : float=0.2, num_gens: int=0, const: float=2.26597) -> Node:
+def coeff_mutation(multitree : Multitree, prob_coeff_mut : float= 0.25, temp : float=0.2, generation: int=0, const: float=2.26597) -> Node:
   """
   Applies random coefficient mutations to constant nodes 
 
@@ -232,7 +232,7 @@ def coeff_mutation(multitree : Multitree, prob_coeff_mut : float= 0.25, temp : f
     if randu() < prob_coeff_mut:
       v = c.get_value()
       # update the value by +- temp relative to current value
-      k = const*np.power(np.e, num_gens*-temp)
+      k = const*np.power(np.e, generation * -temp)
       new_v = v + temp*np.abs(v)*randn()
       c.set_value(new_v)
   
