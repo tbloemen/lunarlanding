@@ -233,7 +233,7 @@ def coeff_mutation(multitree : Multitree, prob_coeff_mut : float= 0.25, temp : f
       v = c.get_value()
       # update the value by +- temp relative to current value
       k = const*np.power(np.e, generation * -temp)
-      new_v = v + temp*np.abs(v)*randn()
+      new_v = v + k*np.abs(v)*randn()
       c.set_value(new_v)
   
   multitree.children[r] = tree
