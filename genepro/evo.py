@@ -9,11 +9,12 @@ import time, inspect
 from copy import deepcopy
 from joblib.parallel import Parallel, delayed
 from typing import List
+from functools import cache
 
 from genepro.node import Node
 from genepro.variation import *
 from genepro.selection import tournament_selection
-from compare_expressions import compare_multitrees
+from compare_expressions import compare_multitrees, convert_to_sympy_round, compare_sympy
 
 import numpy as np
 
@@ -173,23 +174,25 @@ class Evolution:
             return True
         return False
 
-    def _initialize_population(self):
+    def _initialize_population(self, is_diverse_population=False):
         """
         Generates a random initial population and evaluates it
         """
+        if is_diverse_population:
+            population = self.gen_diverse_population()
+            self.population = population
+        else:
         # initialize the population
-        self.population = Parallel(n_jobs=self.n_jobs)(
-            delayed(generate_random_multitree)(
-                self.n_trees,
-                self.internal_nodes,
-                self.leaf_nodes,
-                max_depth=self.init_max_depth,
+            self.population = Parallel(n_jobs=self.n_jobs)(
+                delayed(generate_random_multitree)(
+                    self.n_trees,
+                    self.internal_nodes,
+                    self.leaf_nodes,
+                    max_depth=self.init_max_depth,
+                )
+                for _ in range(self.pop_size)
             )
-            for _ in range(self.pop_size)
-        )
 
-        for count, individual in enumerate(self.population):
-            individual.get_readable_repr()
 
         # evaluate the trees and store their fitness
         fitnesses = Parallel(n_jobs=self.n_jobs)(
@@ -214,6 +217,28 @@ class Evolution:
         avg = np.mean([t.fitness for t in self.population])
         self.best_of_gens.append(deepcopy(best))
         self.avg_of_gens.append(avg)
+
+    @cache
+    def gen_diverse_population(self):
+        repr_set = []
+        population = []
+        cnt = 0
+        while len(repr_set) < self.pop_size:
+            while True:
+                indiv = generate_random_multitree(
+                        self.n_trees,
+                        self.internal_nodes,
+                        self.leaf_nodes,
+                        max_depth=self.init_max_depth,)
+                indiv_sp = [convert_to_sympy_round(e) for e in indiv.get_readable_repr()]
+                if not any(compare_sympy(indiv_sp, other) for other in repr_set):
+                    if self.verbose:
+                        cnt += 1
+                        print(f"Init: {cnt}/{self.pop_size} ")
+                    break
+            population.append(indiv)
+            repr_set.append(indiv_sp)
+        return population
 
     def _perform_generation(self, is_multiobjective=False):
         """
@@ -302,7 +327,7 @@ class Evolution:
         self.best_of_gens.append(deepcopy(best))
         self.avg_of_gens.append(avg)
 
-    def evolve(self, is_multiobjective=False):
+    def evolve(self, is_multiobjective=False, is_diverse_population=False):
         """
         Runs the evolution until a termination criterion is met;
         first, a random population is initialized, second the generational loop is started:
@@ -317,7 +342,7 @@ class Evolution:
         # set the start time
         self.start_time = time.time()
 
-        self._initialize_population()
+        self._initialize_population(is_diverse_population=is_diverse_population)
         best_fitnesses_across_gens.append(self.best_of_gens[-1].fitness)
         average_fitness.append(np.average([t.fitness for t in self.population]))
         # generational loop
