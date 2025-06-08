@@ -130,44 +130,44 @@ class Evolution:
         n_jobs: int = 4,
         verbose: bool = False,
     ):
-        self.num_gens = 0
-        # const = 0
-        # for i in range(50):
-        #     const += np.power(np.e, -i*coeff_opts[0]["k"])
-        # const = 12.5/const
-        # coeff_opts = [{
-        #     "fun": coeff_mutation,
-        #     "rate": coeff_opts[0]["rate"],
-        #     "kwargs": {
-        #         "temp": coeff_opts[0]["k"],
-        #         "generation": self.num_gens,
-        #         "const": const
-        #     }
-        # }]
+            self.num_gens = 0
+            # const = 0
+            # for i in range(50):
+            #     const += np.power(np.e, -i*coeff_opts[0]["k"])
+            # const = 12.5/const
+            # coeff_opts = [{
+            #     "fun": coeff_mutation,
+            #     "rate": coeff_opts[0]["rate"],
+            #     "kwargs": {
+            #         "temp": coeff_opts[0]["k"],
+            #         "generation": self.num_gens,
+            #         "const": const
+            #     }
+            # }
             # set parameters as attributes
             _, _, _, values = inspect.getargvalues(inspect.currentframe())
             values.pop("self")
             for arg, val in values.items():
                 setattr(self, arg, val)
 
-        # fill-in empty kwargs if absent in crossovers, mutations, coeff_opts
-        for variation_list in [crossovers, mutations, coeff_opts]:
-          for i in range(len(variation_list)):
-            if "kwargs" not in variation_list[i]:
-              variation_list[i]["kwargs"] = dict()
+            # fill-in empty kwargs if absent in crossovers, mutations, coeff_opts
+            for variation_list in [crossovers, mutations, coeff_opts]:
+              for i in range(len(variation_list)):
+                if "kwargs" not in variation_list[i]:
+                  variation_list[i]["kwargs"] = dict()
 
-        # same for selection
-        if "kwargs" not in selection:
-          selection["kwargs"] = dict()
+            # same for selection
+            if "kwargs" not in selection:
+              selection["kwargs"] = dict()
 
-        # initialize some state variables
-        self.population = list()
+            # initialize some state variables
+            self.population = list()
 
-        self.num_evals = 0
-        self.start_time, self.elapsed_time = 0, 0
-        self.best_of_gens = list()
-        self.avg_of_gens = list()
-        self.memory = None
+            self.num_evals = 0
+            self.start_time, self.elapsed_time = 0, 0
+            self.best_of_gens = list()
+            self.avg_of_gens = list()
+            self.memory = None
 
     def _must_terminate(self) -> bool:
         """
