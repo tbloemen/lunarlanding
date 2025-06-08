@@ -1,0 +1,18 @@
+{
+  "best_training": 121.97366769591434,
+  "best_test": -576.7003176268108,
+  "operator_count": {
+    "Minus": 63,
+    "Cube": 66,
+    "Sign": 126,
+    "Sin": 64,
+    "Max": 1,
+    "Times": 2,
+    "Exp": 63,
+    "Plus": 124,
+    "Div": 62,
+    "Min": 1,
+    "Clamp": 58,
+    "Abs": 6
+  }
+}
