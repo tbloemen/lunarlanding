@@ -14,7 +14,7 @@ from functools import cache
 from genepro.node import Node
 from genepro.variation import *
 from genepro.selection import tournament_selection
-from compare_expressions import compare_multitrees, convert_to_sympy_round, compare_sympy
+from compare_expressions import *
 
 import numpy as np
 
@@ -231,7 +231,7 @@ class Evolution:
                         self.leaf_nodes,
                         max_depth=self.init_max_depth,)
                 indiv_sp = [convert_to_sympy_round(e) for e in indiv.get_readable_repr()]
-                if not any(compare_sympy(indiv_sp, other) for other in repr_set):
+                if not any(compare_multitrees(indiv_sp, other) for other in repr_set):
                     if self.verbose:
                         cnt += 1
                         print(f"Init: {cnt}/{self.pop_size} ")
@@ -374,7 +374,7 @@ class Evolution:
 
         # Helper to compare a single pair
         def pairwise(i, j):
-            sim = compare_multitrees(readable_reprs[i], readable_reprs[j])
+            sim = get_diversity_of_multitrees(readable_reprs[i], readable_reprs[j])
             return (i, j, sim)
 
         # Generate all unique pairs (i, j) with i < j

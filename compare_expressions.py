@@ -4,6 +4,42 @@ import re
 from functools import cache
 
 
+def get_diversity_of_multitrees(t1: List[str], t2: List[str]):
+    """
+    compares trees in the forest by comparing trees with same indices.
+    If constants match when rounded, add 5 to similarity.
+    If constants match when normalized (to 1 or -1 depending on the sign), add 1 to similarity
+    """
+    # for each kind of action
+    assert len(t1) == len(t2)
+    sim_score = 0
+    for i in range(len(t1)):
+        e_ones_1 = convert_to_sympy_ones(t1[i])
+        e_ones_2 = convert_to_sympy_ones(t2[i])
+        if e_ones_1.equals(e_ones_2):
+            sim_score += 1
+        else:
+            e_round_1 = convert_to_sympy_round(t1[i])
+            e_round_2 = convert_to_sympy_round(t2[i])
+            sim_score += 4 if e_round_1.equals(e_round_2) else 0
+    return sim_score
+
+
+@cache
+def convert_to_sympy_ones(exp: str) -> Expr:
+    """
+    converts string like this `((x_0/(x_3-(x_5+x_1)))/(((x_0*x_3)*x_3)*((x_4+x_0)/x_0)))` into a sympy expression.
+    Each constant is replaced with -1 if it is negative, and with 1 if it is positive
+    """
+    exp = insert_mul_around_paren(exp)
+
+    # Replace all numbers (not part of variable names)
+    exp_clean = re.sub(r"(?<![a-zA-Z_])(\d+(\.\d+)?)", "1", exp)
+    # Convert to sympy expression
+    expr = sympify(exp_clean)
+    return expr
+
+
 def compare_multitrees(t1: List[Expr], t2: List[Expr]):
     """
     compares trees in the forest by comparing trees with same indices.
@@ -16,9 +52,6 @@ def compare_multitrees(t1: List[Expr], t2: List[Expr]):
         if t1[i].equals(t2[i]):
             return True
     return False
-
-def compare_sympy(e1, e2) -> bool:
-    return compare_multitrees(e1, e2)
 
 @cache
 def convert_to_sympy_round(exp: str) -> Expr:
