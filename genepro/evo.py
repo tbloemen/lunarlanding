@@ -122,17 +122,17 @@ class Evolution:
     verbose : bool=False,
     ):
     self.num_gens = 0
-    k = 0
+    const = 0
     for i in range(50):
-        k += np.power(np.e, -i*coeff_opts[0]["k"])
-    k = 12.5/k
+        const += np.power(np.e, -i*coeff_opts[0]["k"])
+    const = 12.5/const
     coeff_opts = [{
         "fun": coeff_mutation,
         "rate": coeff_opts[0]["rate"],
         "kwargs": {
             "temp": coeff_opts[0]["k"],
             "generation": self.num_gens,
-            "const": k
+            "const": const
         }
     }]
     # set parameters as attributes
