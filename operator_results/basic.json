@@ -1,0 +1,10 @@
+{
+  "best_training": 81.35221105764364,
+  "best_test": -773.9272047182434,
+  "operator_count": {
+    "Minus": 169,
+    "Plus": 310,
+    "Times": 141,
+    "Div": 8
+  }
+}

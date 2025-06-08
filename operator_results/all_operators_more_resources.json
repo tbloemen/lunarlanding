@@ -1,0 +1,22 @@
+{
+  "best_training": 723.851680488648,
+  "best_test": 251.7995993403325,
+  "operator_count": {
+    "Sqrt": 256,
+    "Cube": 447,
+    "Div": 506,
+    "Minus": 135,
+    "Sin": 259,
+    "Cos": 15,
+    "Abs": 30,
+    "Min": 59,
+    "Max": 745,
+    "Plus": 252,
+    "Square": 124,
+    "Sign": 47,
+    "Clamp": 1,
+    "Exp": 1,
+    "Log": 3,
+    "Times": 1
+  }
+}

@@ -364,7 +364,12 @@ class Evolution:
                     )
                 )
 
-        return best_fitnesses_across_gens, average_fitness, time_elapsed, num_evals
+        # Get the fitnesses of the individuals in the final population
+        # to draw the Pareto front
+        final_population_fitnesses = [ind.fitness for ind in self.population]
+
+        return best_fitnesses_across_gens, average_fitness, time_elapsed, num_evals, final_population_fitnesses
+
 
     def calculate_diversities(self, offspring_population):
 
