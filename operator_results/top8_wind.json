@@ -1,0 +1,14 @@
+{
+  "best_training": 232.5724301035868,
+  "best_test": -354.28045270227926,
+  "operator_count": {
+    "Div": 181,
+    "Plus": 108,
+    "Minus": 25,
+    "Max": 3,
+    "Cube": 62,
+    "Square": 130,
+    "Sin": 7,
+    "Sqrt": 57
+  }
+}
