@@ -130,46 +130,46 @@ class Evolution:
         n_jobs: int = 4,
         verbose: bool = False,
     ):
-            self.num_gens = 0
-            # const = 0
-            # for i in range(50):
-            #     const += np.power(np.e, -i*coeff_opts[0]["k"])
-            # const = 12.5/const
-            # coeff_opts = [{
-            #     "fun": coeff_mutation,
-            #     "rate": coeff_opts[0]["rate"],
-            #     "kwargs": {
-            #         "temp": coeff_opts[0]["k"],
-            #         "generation": self.num_gens,
-            #         "const": const
-            #     }
-            # }
-            # set parameters as attributes
-            _, _, _, values = inspect.getargvalues(inspect.currentframe())
-            values.pop("self")
-            for arg, val in values.items():
-                setattr(self, arg, val)
+        self.num_gens = 0
+        # const = 0
+        # for i in range(50):
+        #     const += np.power(np.e, -i*coeff_opts[0]["k"])
+        # const = 12.5/const
+        # coeff_opts = [{
+        #     "fun": coeff_mutation,
+        #     "rate": coeff_opts[0]["rate"],
+        #     "kwargs": {
+        #         "temp": coeff_opts[0]["k"],
+        #         "generation": self.num_gens,
+        #         "const": const
+        #     }
+        # }
+        # set parameters as attributes
+        _, _, _, values = inspect.getargvalues(inspect.currentframe())
+        values.pop("self")
+        for arg, val in values.items():
+            setattr(self, arg, val)
 
-            # fill-in empty kwargs if absent in crossovers, mutations, coeff_opts
-            for variation_list in [crossovers, mutations, coeff_opts]:
-              for i in range(len(variation_list)):
+        # fill-in empty kwargs if absent in crossovers, mutations, coeff_opts
+        for variation_list in [crossovers, mutations, coeff_opts]:
+            for i in range(len(variation_list)):
                 if "kwargs" not in variation_list[i]:
-                  variation_list[i]["kwargs"] = dict()
+                    variation_list[i]["kwargs"] = dict()
 
-            # same for selection
-            if "kwargs" not in selection:
-              selection["kwargs"] = dict()
+        # same for selection
+        if "kwargs" not in selection:
+            selection["kwargs"] = dict()
 
-            # initialize some state variables
-            self.population = list()
+        # initialize some state variables
+        self.population = list()
 
-            self.archive = []
+        self.archive = []
 
-            self.num_evals = 0
-            self.start_time, self.elapsed_time = 0, 0
-            self.best_of_gens = list()
-            self.avg_of_gens = list()
-            self.memory = None
+        self.num_evals = 0
+        self.start_time, self.elapsed_time = 0, 0
+        self.best_of_gens = list()
+        self.avg_of_gens = list()
+        self.memory = None
 
     def _must_terminate(self) -> bool:
         """
@@ -197,7 +197,7 @@ class Evolution:
             population = self.gen_diverse_population()
             self.population = population
         else:
-        # initialize the population
+            # initialize the population
             self.population = Parallel(n_jobs=self.n_jobs)(
                 delayed(generate_random_multitree)(
                     self.n_trees,
@@ -207,7 +207,6 @@ class Evolution:
                 )
                 for _ in range(self.pop_size)
             )
-
 
         # evaluate the trees and store their fitness
         fitnesses = Parallel(n_jobs=self.n_jobs)(
@@ -241,11 +240,14 @@ class Evolution:
         while len(repr_set) < self.pop_size:
             while True:
                 indiv = generate_random_multitree(
-                        self.n_trees,
-                        self.internal_nodes,
-                        self.leaf_nodes,
-                        max_depth=self.init_max_depth,)
-                indiv_sp = [convert_to_sympy_round(e) for e in indiv.get_readable_repr()]
+                    self.n_trees,
+                    self.internal_nodes,
+                    self.leaf_nodes,
+                    max_depth=self.init_max_depth,
+                )
+                indiv_sp = [
+                    convert_to_sympy_round(e) for e in indiv.get_readable_repr()
+                ]
                 if not any(compare_multitrees(indiv_sp, other) for other in repr_set):
                     if self.verbose:
                         cnt += 1
@@ -257,7 +259,7 @@ class Evolution:
 
     def calculate_diversities_for_archive(self, candidates):
         """
-            Keeps structurally different individuals in the archive.
+        Keeps structurally different individuals in the archive.
         """
         n_cand = len(candidates)
         n_arch = len(self.archive)
@@ -272,18 +274,24 @@ class Evolution:
         arch_repr = [a.get_readable_repr() for a in other]
 
         def avg_similarity_to_archive(i):
-            sims = [compare_multitrees_old(cand_repr[i], arch_repr[j]) for j in range(n_arch)]
+            sims = [
+                compare_multitrees_old(cand_repr[i], arch_repr[j])
+                for j in range(n_arch)
+            ]
             return sum(sims) / n_arch if n_arch > 0 else 0
 
-        diversities = Parallel(n_jobs=self.n_jobs)(delayed(avg_similarity_to_archive)(i) for i in range(n_cand))
+        diversities = Parallel(n_jobs=self.n_jobs)(
+            delayed(avg_similarity_to_archive)(i) for i in range(n_cand)
+        )
 
         return diversities
+
     def update_archive(self, candidates, archive_flag="none"):
         """
-            Updates the archive. Options for flags: none, basic, diversity.
-            None means that we are in a baseline variation with no flag.
-            Basic refers to the state-of-the-art archive.
-            Diversity archive includes both diversity adn fitness metrics.
+        Updates the archive. Options for flags: none, basic, diversity.
+        None means that we are in a baseline variation with no flag.
+        Basic refers to the state-of-the-art archive.
+        Diversity archive includes both diversity adn fitness metrics.
         """
         if archive_flag == "none":
             return
@@ -301,7 +309,7 @@ class Evolution:
         if archive_flag == "basic":
             # Keep top-N based on fitness
             combined.sort(key=lambda x: x.fitness, reverse=True)
-            self.archive = combined[:self.pop_size]
+            self.archive = combined[: self.pop_size]
 
         elif archive_flag == "diversity":
             candidates = combined
@@ -311,11 +319,20 @@ class Evolution:
             f_max, f_min = max(fitnesses), min(fitnesses)
             d_max, d_min = max(diversities), min(diversities)
             norm_fitnesses = [(f - f_min) / (f_max - f_min + 1e-8) for f in fitnesses]
-            norm_diversities = [(d - d_min) / (d_max - d_min + 1e-8) for d in diversities]
-            scores = [0.7 * f + 0.3 * d for f, d in zip(norm_fitnesses, norm_diversities)]
+            norm_diversities = [
+                (d - d_min) / (d_max - d_min + 1e-8) for d in diversities
+            ]
+            scores = [
+                0.7 * f + 0.3 * d for f, d in zip(norm_fitnesses, norm_diversities)
+            ]
 
-            sorted_inds = [x for _, x in sorted(zip(scores, candidates), key=lambda x: x[0], reverse=True)]
-            self.archive = sorted_inds[:self.pop_size]
+            sorted_inds = [
+                x
+                for _, x in sorted(
+                    zip(scores, candidates), key=lambda x: x[0], reverse=True
+                )
+            ]
+            self.archive = sorted_inds[: self.pop_size]
 
     def _perform_generation(self, is_multiobjective=False, archive_flag="none"):
         """
@@ -404,7 +421,6 @@ class Evolution:
             offspring_population.sort(key=lambda x: x.fitness)
             offspring_population[:num_elites] = elites
 
-
         # store cost
         self.num_evals += self.pop_size
         # update the population for the next iteration
@@ -416,7 +432,9 @@ class Evolution:
         self.best_of_gens.append(deepcopy(best))
         self.avg_of_gens.append(avg)
 
-    def evolve(self, is_multiobjective=False, is_diverse_population=False, archive_flag="none"):
+    def evolve(
+        self, is_multiobjective=False, is_diverse_population=False, archive_flag="none"
+    ):
         """
         Runs the evolution until a termination criterion is met;
         first, a random population is initialized, second the generational loop is started:
@@ -458,8 +476,13 @@ class Evolution:
         # to draw the Pareto front
         final_population_fitnesses = [ind.fitness for ind in self.population]
 
-        return best_fitnesses_across_gens, average_fitness, time_elapsed, num_evals, final_population_fitnesses
-
+        return (
+            best_fitnesses_across_gens,
+            average_fitness,
+            time_elapsed,
+            num_evals,
+            final_population_fitnesses,
+        )
 
     def calculate_diversities(self, offspring_population):
 

@@ -53,12 +53,13 @@ def compare_multitrees(t1: List[Expr], t2: List[Expr]):
             return True
     return False
 
+
 def compare_multitrees_old(t1: List[Expr], t2: List[Expr]):
     """
-        compares trees in the forest by comparing trees with same indices.
-        If constants match when rounded, add 5 to similarity.
-        If constants match when normalized (to 1 or -1 depending on the sign), add 1 to similarity
-        """
+    compares trees in the forest by comparing trees with same indices.
+    If constants match when rounded, add 5 to similarity.
+    If constants match when normalized (to 1 or -1 depending on the sign), add 1 to similarity
+    """
     # for each kind of action
     assert len(t1) == len(t2)
     sim_score = 0
@@ -106,5 +107,3 @@ def insert_mul_around_paren(exp: str) -> str:
     # ')' before number
     exp = re.sub(r"\)(\d+(\.\d+)?)", r")*\1", exp)
     return exp
-
-
